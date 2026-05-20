@@ -16,7 +16,7 @@ providers:
     enabled: true
     api_key: "${OPENROUTER_API_KEY}"
     base_url: "https://openrouter.ai/api/v1"
-    model: "anthropic/claude-3-haiku-20240307"
+    model: "openai/gpt-oss-120b:free"
     timeout: 60
   
   openai:
