@@ -94,7 +94,7 @@ class HermesAgent:
             
             # 2. EXECUTE
             if self.verbose:
-                console.print("Ejecutando...[/green]")
+                console.print("Ejecutando...")
             
             try:
                 result = self.executor.execute(action, args)
@@ -116,19 +116,19 @@ class HermesAgent:
             
             # 3. EVALUATE
             if self.verbose:
-                console.print("Evaluando...[/magenta]")
+                console.print("Evaluando...")
             
             eval_result = self.evaluator.evaluate(goal, action, result)
             success = eval_result.get("success", False)
             feedback = eval_result.get("feedback", "")
             
             if self.verbose:
-                console.print(f"💬 Feedback:[/magenta] {feedback}")
+                console.print(f"Feedback: {feedback}")
             
             # Check if done
             if success:
                 if self.verbose:
-                    console.print("Goal cumplido![/green]")
+                    console.print("Goal cumplido!")
                 self.running = False
                 break
             
@@ -138,11 +138,11 @@ class HermesAgent:
             # Check if should continue
             if not self.planner.should_continue(goal, result):
                 if self.verbose:
-                    console.print("Planner indica detener[/yellow]")
+                    console.print("Planner indica detener")
                 self.running = False
         
         if iteration >= self.max_iterations:
-            console.print(f"Max iteraciones alcanzado ({self.max_iterations})[/red]")
+            console.print(f"Max iteraciones alcanzado ({self.max_iterations})")
         
         return last_result
     
