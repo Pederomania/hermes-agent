@@ -1,8 +1,23 @@
 """Herramienta de shell para ejecutar comandos."""
+import re
 import subprocess
 from typing import Any
 
 from .base import Tool, ToolResult
+
+
+# Patrones bloqueados por seguridad
+BLOCKED_PATTERNS = [
+    r'\brm\s+-rf\b',
+    r'\bmkfs\b',
+    r'\bdd\b.*of=',
+    r'\bchmod\s+777\b',
+    r'>\s*/dev/',
+    r'\bcurl\b.*\|\s*bash',
+    r'\bwget\b.*\|\s*sh',
+    r':\(\)\{',
+    r'\bsudo\s+su\b',
+]
 
 
 class ShellTool(Tool):
@@ -14,8 +29,20 @@ class ShellTool(Tool):
     def __init__(self, working_dir: str | None = None):
         self.working_dir = working_dir
     
+    def _is_safe(self, command: str) -> tuple[bool, str]:
+        """Valida que el comando sea seguro."""
+        for pattern in BLOCKED_PATTERNS:
+            if re.search(pattern, command, re.IGNORECASE):
+                return False, f"Comando bloqueado: {pattern}"
+        return True, ""
+    
     def execute(self, command: str, timeout: int = 60, **kwargs) -> str:
         """Ejecuta un comando de shell."""
+        # Validar seguridad
+        safe, reason = self._is_safe(command)
+        if not safe:
+            return f"❌ {reason}"
+        
         try:
             result = subprocess.run(
                 command,
@@ -34,7 +61,7 @@ class ShellTool(Tool):
             return output or "[Sin output]"
         
         except subprocess.TimeoutExpired:
-            return f"❌ Timeout después de {timeout}s"
+            return f"❌ Timeout despues de {timeout}s"
         except Exception as e:
             return f"❌ Error: {str(e)}"
     

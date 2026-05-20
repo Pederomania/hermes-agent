@@ -87,6 +87,7 @@ Escribe /help para ver comandos disponibles.
             "history": self._cmd_history,
             "session": self._cmd_session,
             "reload": self._cmd_reload,
+            "run": self._cmd_run,
         }
         
         handler = handlers.get(cmd)
@@ -134,7 +135,10 @@ Escribe /help para ver comandos disponibles.
         if args:
             model_name = args[0]
             try:
+                from src.providers import set_default_provider
+                
                 self.provider = ProviderFactory.create(model_name)
+                set_default_provider(self.provider, model_name)
                 self.console.print(f"[green]✅ Proveedor cambiado a: {model_name}[/green]")
             except Exception as e:
                 self.console.print(f"[red]❌ Error: {e}[/red]")
@@ -190,6 +194,25 @@ Escribe /help para ver comandos disponibles.
         reload_config()
         self.console.print("[green]✅ Configuración recargada[/green]")
     
+    def _cmd_run(self, *args) -> None:
+        """Ejecuta el agente autonomo."""
+        if not args:
+            self.console.print("[red]Uso: /run <objetivo>[/red]")
+            return
+        
+        goal = " ".join(args)
+        from src.agent import HermesAgent
+        
+        self.console.print(Panel(f"[bold cyan]Ejecutando:[/bold cyan] {goal}", border_style="cyan"))
+        
+        try:
+            agent = HermesAgent(provider=self.provider, verbose=True)
+            result = agent.run(goal)
+            self.console.print(Panel(result, border_style="green", title="Resultado final"))
+        except Exception as e:
+            self.console.print(f"[red]Error: {e}[/red]")
+
+
     def _chat(self, user_input: str) -> None:
         """Envía mensaje al LLM."""
         # Agregar mensaje del usuario

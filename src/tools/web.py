@@ -17,8 +17,7 @@ class WebSearchTool(Tool):
     def execute(self, query: str, max_results: int = 5, **kwargs) -> str:
         """Busca en la web."""
         if not self.api_key:
-            # Fallback: intentar con la API de Tavily si está disponible
-            return self._fetch_with_tavily(query, max_results)
+            return f"❌ TAVILY_API_KEY no configurada. Busca no disponible para: {query}"
         
         return self._fetch_with_tavily(query, max_results)
     

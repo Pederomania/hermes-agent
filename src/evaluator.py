@@ -1,4 +1,6 @@
 """Evaluator: evalúa si las acciones tuvieron éxito."""
+import json
+import re
 from typing import Any
 
 from src.config import get_config

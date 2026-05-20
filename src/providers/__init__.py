@@ -69,13 +69,23 @@ _provider_name: str | None = None
 
 def get_provider(provider_name: str | None = None, force_new: bool = False) -> LLMProvider:
     """Obtiene un proveedor (helper)."""
-    return ProviderFactory.create(provider_name)
+    if force_new:
+        return ProviderFactory.create(provider_name)
+    config = get_config()
+    name = provider_name or config.default_provider
+    global _default_provider, _provider_name
+    
+    if _default_provider is None or _provider_name != name:
+        _default_provider = ProviderFactory.create(name)
+        _provider_name = name
+    
+    return _default_provider
 
 
 def get_default_provider(force_new: bool = False) -> LLMProvider:
-    """Obtiene el proveedor por defecto, con opción de forzar nueva instancia."""
-    global _default_provider, _provider_name
+    """Obtiene el proveedor por defecto."""
     config = get_config()
+    global _default_provider, _provider_name
     
     if force_new or _default_provider is None or _provider_name != config.default_provider:
         _default_provider = ProviderFactory.get_default()
