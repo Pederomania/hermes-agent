@@ -6,7 +6,7 @@ from src.providers import get_default_provider
 
 
 class Evaluator:
-    """Evalúa resultados de acciones."""
+    """Evalúa results de acciones."""
     
     def __init__(self, provider=None):
         self.provider = provider or get_default_provider()
@@ -14,21 +14,21 @@ class Evaluator:
     
     def evaluate(self, goal: str, action: str, result: str) -> dict:
         """
-        Evalúa si la acción tuvo éxito.
+        Evalúa si la action tuvo éxito.
         
         Args:
-            goal: Objetivo original
+            goal: Goal original
             action: Acción tomada
-            result: Resultado de la acción
+            result: Resultado de la action
         
         Returns:
             Dict con success, feedback, severity
         """
         prompt = f"""Eres un evaluador de acciones de un agente autónomo.
 
-Analiza si la acción resolvió el objetivo.
+Analiza si la action resolvió el objetivo.
 
-## Objetivo
+## Goal
 {goal}
 
 ## Acción tomada
@@ -38,8 +38,8 @@ Analiza si la acción resolvió el objetivo.
 {result}
 
 Evalúa:
-1. ¿La acción tuvo éxito?
-2. ¿El resultado es correcto?
+1. ¿La action tuvo éxito?
+2. ¿El result es correcto?
 3. ¿Se necesita más trabajo?
 
 Responde en JSON:
@@ -58,34 +58,34 @@ Responde en JSON:
         except Exception as e:
             return {
                 "success": True,
-                "feedback": f"No se pudo evaluar: {e}",
+                "feedback": f"No se pudo evaluate: {e}",
                 "severity": "info"
             }
     
     def _parse_response(self, response: str) -> dict:
-        """Parsea la respuesta."""
+        """Parsea la response usando json.loads (NO eval por seguridad)."""
         import re
         try:
             json_match = re.search(r'\{.*\}', response, re.DOTALL)
             if json_match:
-                return eval(json_match.group())
-        except:
+                return json.loads(json_match.group())
+        except (json.JSONDecodeError, AttributeError, TypeError):
             pass
         
-        # Fallback
+        # Fallback: si no puede parsear, NO asumir éxito
         return {
-            "success": "error" not in response.lower(),
+            "success": False,
             "feedback": response[:200],
             "severity": "warning"
         }
     
     def should_retry(self, result: str) -> bool:
         """Decide si debemos reintentar."""
-        prompt = f"""Analiza este resultado:
+        prompt = f"""Analiza este result:
 
 {result}
 
-¿Deberíamos reintentar esta acción?
+¿Deberíamos reintentar esta action?
 Responde SOLO con "sí" o "no":"""
         
         response = self.provider.complete(prompt).lower().strip()

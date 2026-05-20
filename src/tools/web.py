@@ -30,6 +30,7 @@ class WebSearchTool(Tool):
             response = requests.post(
                 "https://api.tavily.com/search",
                 json={
+                    "api_key": self.api_key,  # Incluir la API key
                     "query": query,
                     "max_results": max_results,
                     "include_answer": True,

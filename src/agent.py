@@ -52,7 +52,7 @@ class HermesAgent:
         Ejecuta el loop de agente.
         
         Args:
-            goal: Objetivo a cumplir
+            goal: Goal a cumplir
         
         Returns:
             Resultado final
@@ -62,7 +62,7 @@ class HermesAgent:
         last_result = ""
         context = ""
         
-        console.print(Panel(f"[bold cyan]🎯 Objetivo:[/bold cyan] {goal}", border_style="cyan"))
+        console.print(Panel(f"[bold cyan]🎯 Goal:[/bold cyan] {goal}", border_style="cyan"))
         
         while self.running and iteration < self.max_iterations:
             iteration += 1
@@ -128,12 +128,12 @@ class HermesAgent:
             # Check if done
             if success:
                 if self.verbose:
-                    console.print("[green]✅ Objetivo cumplido![/green]")
+                    console.print("[green]✅ Goal cumplido![/green]")
                 self.running = False
                 break
             
-            # Update context
-            context = f"Iteración {iteration}: {action} → {result[:100]}"
+            # Update context (acumular)
+            context += f"[Iter {iteration}] {action}: {result[:150]}\n"
             
             # Check if should continue
             if not self.planner.should_continue(goal, result):

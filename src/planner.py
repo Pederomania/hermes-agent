@@ -37,33 +37,33 @@ Analizar la situación actual, decidir el siguiente paso, y planear cómo ejecut
 {chr(10).join(tools_text)}
 
 ## Directrices
-1. Solo dius una acción a la vez
-2. Analiza el output de la acción anterior
-3. Si falló, replanifica
-4. Si tienes éxito, continuar al siguiente paso
-5. Siempre devuelve un plan estructurado
+1. Solo decide una accion a la vez
+2. Analiza el output de la accion anterior
+3. Si fallo, replanifica
+4. Si tienes exito, continuar al siguiente paso
+5. Siempre devuelve un plan estructurado en JSON
 
-## Output格式
-Cada acción debe возвращать en JSON:
+## Output
+Cada accion debe devolver en JSON:
 ```json
-{{
+{
   "thought": "tu razonamiento",
   "action": "nombre de tool a usar",
-  "args": {{"arg1": "valor1"}},
-  "reasoning": "por qué esta acción"
-}}
+  "args": {"arg1": "valor1"},
+  "reasoning": "por que esta accion"
+}
 ```
 
-Ahora analiza la situación y decide:"""
+Ahora analiza la situacion y decide:"""
     
     def plan(self, goal: str, context: str = "", last_result: str = "") -> dict:
         """
         Decide el siguiente paso.
         
         Args:
-            goal: Objetivo principal
+            goal: Goal principal
             context: Contexto de la conversación
-            last_result: Resultado de la última acción
+            last_result: Resultado de la última action
         
         Returns:
             Dict con thought, action, args, reasoning
@@ -81,12 +81,12 @@ Ahora analiza la situación y decide:"""
         if last_result:
             messages.append({
                 "role": "user", 
-                "content": f"Resultado de la última acción:\n{last_result}\n\n¿Cuál es el siguiente paso?"
+                "content": f"Resultado de la última action:\n{last_result}\n\n¿Cuál es el siguiente paso?"
             })
         else:
             messages.append({
                 "role": "user",
-                "content": f"Objetivo: {goal}\n\nDecide la primera acción a tomar."
+                "content": f"Goal: {goal}\n\nDecide la primera action a tomar."
             })
         
         # Call LLM
@@ -96,7 +96,7 @@ Ahora analiza la situación y decide:"""
         return self._parse_response(response)
     
     def _parse_response(self, response: str) -> dict:
-        """Parsea la respuesta del LLM."""
+        """Parsea la response del LLM."""
         try:
             # Try to find JSON in response
             import re
@@ -119,7 +119,7 @@ Ahora analiza la situación y decide:"""
         Decide si debemos continuar o terminado.
         
         Args:
-            goal: Objetivo original
+            goal: Goal original
             result: Resultado reciente
         
         Returns:
@@ -127,7 +127,7 @@ Ahora analiza la situación y decide:"""
         """
         prompt = f"""Analiza si se ha cumplido el objetivo.
 
-Objetivo: {goal}
+Goal: {goal}
 Resultado: {result}
 
 Responde SOLO con "sí" o "no":"""

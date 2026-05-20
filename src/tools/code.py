@@ -12,8 +12,9 @@ class CodeTool(Tool):
     name = "code"
     description = "Analiza, genera y revisa código en múltiples lenguajes"
     
-    def __init__(self, workspace: str | Path | None = None):
+    def __init__(self, workspace: str | Path | None = None, provider=None):
         self.workspace = Path(workspace) if workspace else Path.cwd()
+        self.provider = provider
     
     def execute(
         self,
@@ -62,10 +63,18 @@ class CodeTool(Tool):
         except Exception as e:
             return f"❌ Error al leer: {str(e)}"
     
-    def _generate(self, prompt: str, language: str, **kwargs) -> str:
-        """Genera código basado en un prompt."""
-        # Este es un placeholder - el LLM generará el código
-        return f"# Código {language} basado en: {prompt}\n# (El código será generado por el LLM)"
+    def _generate(self, prompt: str, language: str = "python", **kwargs) -> str:
+        """Genera codigo basado en un prompt usando el LLM."""
+        if not self.provider:
+            return f"# Code {language} based on: {prompt}\n# (No LLM provider configured)"
+        
+        prompt_text = f"Generate {language} code for the following requirement:\n{prompt}\n\nOnly return the code, no explanation."
+        
+        try:
+            result = self.provider.complete(prompt_text)
+            return result
+        except Exception as e:
+            return f"# Error: {e}"
     
     def _review(self, code: str, **kwargs) -> str:
         """Revisa código."""
