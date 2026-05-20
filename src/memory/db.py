@@ -29,6 +29,7 @@ class Memory:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 provider TEXT DEFAULT 'ollama',
+                goal TEXT,
                 metadata TEXT DEFAULT '{}'
             )
         """)
@@ -43,6 +44,36 @@ class Memory:
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 provider_used TEXT,
                 metadata TEXT DEFAULT '{}',
+                FOREIGN KEY (session_id) REFERENCES sessions(id)
+            )
+        """)
+        
+        # Tabla de acciones (HERMES STYLE)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS actions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER,
+                goal TEXT NOT NULL,
+                step INTEGER NOT NULL,
+                thought TEXT,
+                action TEXT NOT NULL,
+                args TEXT,
+                result TEXT,
+                success BOOLEAN,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES sessions(id)
+            )
+        """)
+        
+        # Tabla de goals
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS goals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER,
+                goal TEXT NOT NULL,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP,
                 FOREIGN KEY (session_id) REFERENCES sessions(id)
             )
         """)
@@ -198,7 +229,102 @@ class Memory:
         cursor = conn.cursor()
         
         cursor.execute("DELETE FROM messages WHERE session_id = ?", (session_id,))
+        cursor.execute("DELETE FROM actions WHERE session_id = ?", (session_id,))
+        cursor.execute("DELETE FROM goals WHERE session_id = ?", (session_id,))
         cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+        
+        conn.commit()
+        conn.close()
+    
+    # ===== HERMES STYLE: Actions & Goals =====
+    
+    def log_action(
+        self,
+        session_id: int,
+        goal: str,
+        step: int,
+        thought: str,
+        action: str,
+        args: dict,
+        result: str,
+        success: bool
+    ) -> int:
+        """Loggea una acción (estilo Hermes)."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            """INSERT INTO actions 
+            (session_id, goal, step, thought, action, args, result, success) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (session_id, goal, step, thought, action, json.dumps(args), result, success)
+        )
+        
+        action_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return action_id
+    
+    def get_actions(self, session_id: int, limit: int = 100) -> list[dict]:
+        """Obtiene historial de acciones."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            """SELECT id, goal, step, thought, action, args, result, success, timestamp
+            FROM actions 
+            WHERE session_id = ? 
+            ORDER BY step ASC 
+            LIMIT ?""",
+            (session_id, limit)
+        )
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [
+            {
+                "id": row[0],
+                "goal": row[1],
+                "step": row[2],
+                "thought": row[3],
+                "action": row[4],
+                "args": json.loads(row[5] or "{}"),
+                "result": row[6],
+                "success": row[7],
+                "timestamp": row[8]
+            }
+            for row in rows
+        ]
+    
+    def create_goal(self, session_id: int, goal: str) -> int:
+        """Crea un nuevo goal."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "INSERT INTO goals (session_id, goal) VALUES (?, ?)",
+            (session_id, goal)
+        )
+        
+        goal_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return goal_id
+    
+    def complete_goal(self, goal_id: int) -> None:
+        """Marca un goal como completado."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            """UPDATE goals 
+            SET status = 'completed', completed_at = CURRENT_TIMESTAMP 
+            WHERE id = ?""",
+            (goal_id,)
+        )
         
         conn.commit()
         conn.close()
