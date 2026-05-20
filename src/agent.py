@@ -62,27 +62,27 @@ class HermesAgent:
         last_result = ""
         context = ""
         
-        console.print(Panel(f"[bold cyan]🎯 Goal:[/bold cyan] {goal}", border_style="cyan"))
+        console.print(f"Goal: {goal}")
         
         while self.running and iteration < self.max_iterations:
             iteration += 1
             
             if self.verbose:
-                console.print(f"\n[yellow]📍 Iteración {iteration}/{self.max_iterations}[/yellow]")
+                console.print(f"\n--- Iteracion {iteration}/{self.max_iterations} ---")
             
             # 1. PLAN
             if self.verbose:
-                console.print("[blue]🤔 Planner decidiendo...[/blue]")
+                console.print("Planner decidiendo...")
             
             plan = self.planner.plan(goal, context, last_result)
             
-            thought = plan.get("thought", "")[:100]
+            thought = plan.get("thought", "")\[:100\]
             action = plan.get("action", "echo")
             args = plan.get("args", {})
             
             if self.verbose:
-                console.print(f"[blue]💡 Thought:[/blue] {thought}")
-                console.print(f"[blue]⚡ Action:[/blue] {action}({args})")
+                console.print(f"Thought: {thought}")
+                console.print(f"Action: {action}({args})")
             
             # Log action
             self.memory.add_message(
@@ -94,15 +94,15 @@ class HermesAgent:
             
             # 2. EXECUTE
             if self.verbose:
-                console.print("[green]⚙️ Ejecutando...[/green]")
+                console.print("Ejecutando...\[/green\]")
             
             try:
                 result = self.executor.execute(action, args)
             except Exception as e:
-                result = f"❌ Error: {str(e)}"
+                result = f"Error: {str(e)}"
             
             if self.verbose:
-                console.print(f"[green]📤 Result:[/green] {result[:200]}...")
+                console.print(f"Result: {result\[:200\]}...")
             
             last_result = result
             
@@ -110,39 +110,39 @@ class HermesAgent:
             self.memory.add_message(
                 self.session_id,
                 "assistant",
-                f"Result: {result[:500]}",
+                f"Result: {result\[:500\]}",
                 "executor"
             )
             
             # 3. EVALUATE
             if self.verbose:
-                console.print("[magenta]📊 Evaluando...[/magenta]")
+                console.print("Evaluando...\[/magenta\]")
             
             eval_result = self.evaluator.evaluate(goal, action, result)
             success = eval_result.get("success", False)
             feedback = eval_result.get("feedback", "")
             
             if self.verbose:
-                console.print(f"[magenta]💬 Feedback:[/magenta] {feedback}")
+                console.print(f"💬 Feedback:\[/magenta\] {feedback}")
             
             # Check if done
             if success:
                 if self.verbose:
-                    console.print("[green]✅ Goal cumplido![/green]")
+                    console.print("Goal cumplido!\[/green\]")
                 self.running = False
                 break
             
             # Update context (acumular)
-            context += f"[Iter {iteration}] {action}: {result[:150]}\n"
+            context += f"\[Iter {iteration}\] {action}: {result\[:150\]}\n"
             
             # Check if should continue
             if not self.planner.should_continue(goal, result):
                 if self.verbose:
-                    console.print("[yellow]⚠️ Planner indica detener[/yellow]")
+                    console.print("Planner indica detener\[/yellow\]")
                 self.running = False
         
         if iteration >= self.max_iterations:
-            console.print(f"[red]❌ Max iteraciones alcanzado ({self.max_iterations})[/red]")
+            console.print(f"Max iteraciones alcanzado ({self.max_iterations})\[/red\]")
         
         return last_result
     
