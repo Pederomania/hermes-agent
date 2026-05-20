@@ -59,7 +59,8 @@ class HermesCLI:
 
 Escribe /help para ver comandos disponibles.
 """
-        self.console.print(Panel(banner.strip(), border_style="cyan"))
+        # Usar print simple en vez de Panel para evitar conflicts
+        self.console.print(banner.strip())
     
     def _process_input(self, user_input: str) -> None:
         """Procesa input del usuario."""
@@ -203,14 +204,15 @@ Escribe /help para ver comandos disponibles.
         goal = " ".join(args)
         from src.agent import HermesAgent
         
-        self.console.print(Panel(f"[bold cyan]Ejecutando:[/bold cyan] {goal}", border_style="cyan"))
+        # Solo print simple para evitar errores de Rich
+        self.console.print(f"Ejecutando: {goal}")
         
         try:
             agent = HermesAgent(provider=self.provider, verbose=True)
             result = agent.run(goal)
             # Escapar corchetes para Rich
             safe_result = result.replace("[", "\\[")
-            self.console.print(Panel(safe_result, border_style="green", title="Resultado final"))
+            self.console.print(f"\n=== Resultado ===\n{safe_result}")
         except Exception as e:
             self.console.print(f"[red]Error: {e}[/red]")
 
@@ -248,7 +250,7 @@ Escribe /help para ver comandos disponibles.
             
             # Mostrar respuesta
             safe_response = response.replace("[", "\\[")
-            self.console.print(Panel(safe_response, border_style="blue"))
+            self.console.print(safe_response)
         
         except Exception as e:
             error_msg = f"❌ Error: {str(e)}"
