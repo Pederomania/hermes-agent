@@ -208,7 +208,9 @@ Escribe /help para ver comandos disponibles.
         try:
             agent = HermesAgent(provider=self.provider, verbose=True)
             result = agent.run(goal)
-            self.console.print(Panel(result, border_style="green", title="Resultado final"))
+            # Escapar corchetes para Rich
+            safe_result = result.replace("[", "\\[")
+            self.console.print(Panel(safe_result, border_style="green", title="Resultado final"))
         except Exception as e:
             self.console.print(f"[red]Error: {e}[/red]")
 
@@ -245,7 +247,8 @@ Escribe /help para ver comandos disponibles.
             )
             
             # Mostrar respuesta
-            self.console.print(Panel(response, border_style="blue"))
+            safe_response = response.replace("[", "\\[")
+            self.console.print(Panel(safe_response, border_style="blue"))
         
         except Exception as e:
             error_msg = f"❌ Error: {str(e)}"
